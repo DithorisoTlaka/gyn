@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITCORE - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#D6FF00', 
+                        dark: '#0A0A0A',
+                        card: '#141414',
+                    },
+                    fontFamily: {
+                        heading: ['Oswald', 'sans-serif'],
+                        body: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0A0A0A;
+            color: white;
+        }
+        h1, h2, h3, .nav-logo {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+        }
+        /* Custom Scrollbar for a sleek look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A0A; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D6FF00; 
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-primary selection:text-black flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-card border-r border-gray-900 flex flex-col hidden md:flex">
+        <div class="p-6 border-b border-gray-900">
+            <div class="nav-logo text-3xl font-bold tracking-wider text-white">
+                FIT<span class="text-primary">CORE</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Admin Portal</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="#" class="flex items-center gap-3 bg-primary text-black px-4 py-3 font-medium transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-900 px-4 py-3 font-medium transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                Members
+            </a>
+            <a href="#" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-900 px-4 py-3 font-medium transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                Payments
+            </a>
+            <a href="#" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-900 px-4 py-3 font-medium transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Schedule
+            </a>
+            <a href="#" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-gray-900 px-4 py-3 font-medium transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Settings
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-900">
+            <a href="#" class="flex items-center gap-3 text-red-500 hover:text-red-400 px-4 py-3 font-medium transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="flex justify-between items-center p-6 border-b border-gray-900 bg-card/50 backdrop-blur-sm">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <h2 class="text-2xl font-bold tracking-wide hidden sm:block">Overview</h2>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="relative hidden sm:block">
+                    <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" placeholder="Search members..." class="bg-dark border border-gray-800 text-sm text-white px-10 py-2 focus:outline-none focus:border-primary transition-colors w-64 placeholder-gray-600">
+                </div>
+                
+                <div class="flex items-center gap-3 border-l border-gray-800 pl-6">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=D6FF00&color=000" alt="Admin" class="w-9 h-9">
+                    <div class="hidden md:block">
+                        <p class="text-sm font-semibold text-white leading-tight">Admin User</p>
+                        <p class="text-xs text-primary leading-tight">Superadmin</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 md:p-8">
+            
+            <div class="mb-8">
+                <h3 class="text-gray-400 font-light mb-1">Welcome back,</h3>
+                <h1 class="text-4xl font-bold text-white tracking-wide">SYSTEM <span class="text-primary">STATUS</span></h1>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div class="bg-card border border-gray-900 p-6 hover:-translate-y-1 transition-transform duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wider mb-1">Total Members</p>
+                            <h3 class="text-3xl font-bold font-heading">1,248</h3>
+                        </div>
+                        <div class="p-2 bg-gray-900 text-primary">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="text-sm text-green-500 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        +12% from last month
+                    </div>
+                </div>
+
+                <div class="bg-card border border-gray-900 p-6 hover:-translate-y-1 transition-transform duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wider mb-1">Monthly Revenue</p>
+                            <h3 class="text-3xl font-bold font-heading">$45,230</h3>
+                        </div>
+                        <div class="p-2 bg-gray-900 text-primary">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="text-sm text-green-500 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        +8% from last month
+                    </div>
+                </div>
+
+                <div class="bg-card border border-gray-900 p-6 hover:-translate-y-1 transition-transform duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wider mb-1">Active Trainers</p>
+                            <h3 class="text-3xl font-bold font-heading">42</h3>
+                        </div>
+                        <div class="p-2 bg-gray-900 text-primary">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                        Same as last month
+                    </div>
+                </div>
+
+                <div class="bg-card border border-gray-900 p-6 hover:-translate-y-1 transition-transform duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium uppercase tracking-wider mb-1">Pending Inquiries</p>
+                            <h3 class="text-3xl font-bold font-heading">18</h3>
+                        </div>
+                        <div class="p-2 bg-gray-900 text-primary">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="text-sm text-red-500 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"></path></svg>
+                        Needs attention
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card border border-gray-900 overflow-hidden">
+                <div class="p-6 border-b border-gray-900 flex justify-between items-center">
+                    <h3 class="text-xl font-bold font-heading tracking-wide">Recent Registrations</h3>
+                    <a href="#" class="text-sm text-primary hover:text-white transition-colors">View All</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-dark/50 text-gray-400 text-sm uppercase tracking-wider border-b border-gray-900">
+                                <th class="p-4 font-medium">Member</th>
+                                <th class="p-4 font-medium">Plan</th>
+                                <th class="p-4 font-medium">Join Date</th>
+                                <th class="p-4 font-medium">Status</th>
+                                <th class="p-4 font-medium text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            <tr class="border-b border-gray-900 hover:bg-gray-900/30 transition-colors">
+                                <td class="p-4 flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-primary font-bold">JD</div>
+                                    <div>
+                                        <p class="font-semibold text-white">John Doe</p>
+                                        <p class="text-xs text-gray-500">john@example.com</p>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-gray-300">Pro Powerlifter</td>
+                                <td class="p-4 text-gray-400">Oct 24, 2023</td>
+                                <td class="p-4">
+                                    <span class="bg-primary/10 text-primary px-3 py-1 text-xs font-semibold tracking-wide">ACTIVE</span>
+                                </td>
+                                <td class="p-4 text-right">
+                                    <button class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg></button>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-900 hover:bg-gray-900/30 transition-colors">
+                                <td class="p-4 flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-primary font-bold">SM</div>
+                                    <div>
+                                        <p class="font-semibold text-white">Sarah Miller</p>
+                                        <p class="text-xs text-gray-500">sarah.m@example.com</p>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-gray-300">Cardio Core</td>
+                                <td class="p-4 text-gray-400">Oct 23, 2023</td>
+                                <td class="p-4">
+                                    <span class="bg-primary/10 text-primary px-3 py-1 text-xs font-semibold tracking-wide">ACTIVE</span>
+                                </td>
+                                <td class="p-4 text-right">
+                                    <button class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-900/30 transition-colors">
+                                <td class="p-4 flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center text-gray-400 font-bold">MJ</div>
+                                    <div>
+                                        <p class="font-semibold text-white">Mike Johnson</p>
+                                        <p class="text-xs text-gray-500">mj@example.com</p>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-gray-300">Basic Access</td>
+                                <td class="p-4 text-gray-400">Oct 21, 2023</td>
+                                <td class="p-4">
+                                    <span class="bg-red-500/10 text-red-500 px-3 py-1 text-xs font-semibold tracking-wide">PENDING</span>
+                                </td>
+                                <td class="p-4 text-right">
+                                    <button class="text-gray-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</body>
+</html>
