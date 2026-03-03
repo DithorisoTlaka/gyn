@@ -593,13 +593,6 @@
             messagingSenderId: "123456789012",
             appId: "1:123456789012:web:abcdef1234567890"
         };
-        let db;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-        } catch (e) {
-            console.warn("Firebase not configured:", e);
-        }
 
         // ====================== CLOUDINARY CONFIG ======================
         const CLOUD_NAME = "dv5bsbydu";
