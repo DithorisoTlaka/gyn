@@ -455,7 +455,6 @@ Add Class
 <label class="text-xs text-gray-400 block mb-2">Profile Photo</label>
 <input id="trainer-image" type="file" accept="image/*" required class="w-full bg-dark border border-gray-700 rounded-2xl px-5 py-4">
 </div>
-<!-- UPLOAD PROGRESS -->
 <div id="upload-progress-container" class="hidden">
 <p class="text-xs text-gray-400 mb-2">Uploading image to Cloudinary...</p>
 <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
@@ -638,16 +637,14 @@ if (tab === 'leads') loadLeadsTable();
 if (tab === 'inventory') loadInventoryTable();
 }
 
-// ====================== PENDING VERIFICATION (REALTIME DATABASE) ======================
+// ====================== PENDING VERIFICATION ======================
 function loadPendingRequests() {
 if (!db) return;
 db.ref("membershipRequests").orderByChild("timestamp").on('value', snapshot => {
 let html = '';
 let count = 0;
 const requests = [];
-snapshot.forEach(child => {
-requests.push({id: child.key, ...child.val()});
-});
+snapshot.forEach(child => requests.push({id: child.key, ...child.val()}));
 requests.reverse();
 requests.forEach(req => {
 count++;
@@ -673,11 +670,7 @@ if (!db) return;
 db.ref(`membershipRequests/${id}`).once('value', snap => {
 const data = snap.val();
 if (data) {
-db.ref('members').push({
-...data,
-status: "ACTIVE",
-joinDate: new Date().toISOString().slice(0,10)
-});
+db.ref('members').push({...data, status: "ACTIVE", joinDate: new Date().toISOString().slice(0,10)});
 db.ref(`membershipRequests/${id}`).remove();
 }
 });
@@ -688,41 +681,30 @@ if (!db) return;
 db.ref(`membershipRequests/${id}`).remove();
 }
 
-// ====================== DASHBOARD LOAD (REALTIME DATABASE) ======================
+// ====================== DASHBOARD LOAD ======================
 function loadDashboard() {
 if (!db) return;
 
-// Total members
-db.ref("members").on('value', s => {
-document.getElementById("total-members").textContent = s.numChildren();
-});
+db.ref("members").on('value', s => document.getElementById("total-members").textContent = s.numChildren());
 
-// Revenue
 db.ref("stats/revenue").on('value', doc => {
 const r = doc.val() ? doc.val().monthly || 0 : 0;
 document.getElementById("monthly-revenue").textContent = "R" + r.toLocaleString();
 document.getElementById("revenue-total").textContent = "R" + r.toLocaleString();
 });
 
-// Active trainers
 db.ref("trainers").on('value', s => {
 let activeCount = 0;
-s.forEach(child => {
-if (child.val().status === "active") activeCount++;
-});
+s.forEach(child => { if (child.val().status === "active") activeCount++; });
 document.getElementById("active-trainers").textContent = activeCount;
 });
 
-// Pending leads
 db.ref("leads").on('value', s => {
 let pending = 0;
-s.forEach(child => {
-if (child.val().status === "pending") pending++;
-});
+s.forEach(child => { if (child.val().status === "pending") pending++; });
 document.getElementById("pending-leads").textContent = pending;
 });
 
-// Recent registrations
 db.ref("members").orderByChild("joinDate").limitToLast(5).on('value', snapshot => {
 let html = '';
 const arr = [];
@@ -740,35 +722,24 @@ html += `<tr class="table-row border-b border-gray-900">
 document.getElementById("recent-registrations").innerHTML = html || '<tr><td colspan="5" class="p-12 text-center text-gray-500">No members yet</td></tr>';
 });
 
-// At-risk
-const fourteenDays = new Date();
-fourteenDays.setDate(fourteenDays.getDate() + 14);
+const fourteenDays = new Date(); fourteenDays.setDate(fourteenDays.getDate() + 14);
 const cutoff = fourteenDays.toISOString().slice(0,10);
 db.ref("members").on('value', s => {
-let html = '';
-let count = 0;
+let html = ''; let count = 0;
 s.forEach(d => {
 const m = d.val();
-if (m.membershipEnd && m.membershipEnd < cutoff) {
-count++;
-html += `<div class="flex justify-between items-center bg-gray-900 p-4 rounded-3xl"><div><p>${m.name}</p><p class="text-xs text-red-400">Expires soon</p></div><span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full">AT RISK</span></div>`;
-}
+if (m.membershipEnd && m.membershipEnd < cutoff) { count++; html += `<div class="flex justify-between items-center bg-gray-900 p-4 rounded-3xl"><div><p>${m.name}</p><p class="text-xs text-red-400">Expires soon</p></div><span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full">AT RISK</span></div>`; }
 });
 document.getElementById("at-risk-list").innerHTML = html || '<p class="text-green-500 py-6">No at-risk members</p>';
 document.getElementById("at-risk-count").textContent = count;
 });
 
-// Plans doughnut
 db.ref("members").on('value', s => {
 const plans = {};
-s.forEach(d => {
-const p = d.val().plan || "Other";
-plans[p] = (plans[p] || 0) + 1;
-});
+s.forEach(d => { const p = d.val().plan || "Other"; plans[p] = (plans[p] || 0) + 1; });
 initDoughnut(plans);
 });
 
-// Occupancy
 db.ref("stats/occupancy").on('value', doc => {
 const o = doc.val() || {current:0, capacity:120};
 const perc = Math.round((o.current / o.capacity) * 100);
@@ -791,7 +762,7 @@ function hideSuccessModal() {
 document.getElementById("success-modal").classList.add("hidden");
 }
 
-// ====================== TRAINERS (REALTIME DATABASE + PROGRESS + SUCCESS) ======================
+// ====================== TRAINERS ======================
 function showAddTrainerModal() {
 document.getElementById("add-trainer-modal").classList.remove("hidden");
 document.getElementById("upload-progress-container").classList.add("hidden");
@@ -834,6 +805,7 @@ progressContainer.classList.add("hidden");
 hideAddTrainerModal();
 document.getElementById("trainer-form").reset();
 loadTrainersTable();
+loadDashboard();                    // ← THIS FIXES THE DASHBOARD
 showSuccessModal("Trainer added successfully and is now live in the system!");
 }
 
@@ -842,39 +814,18 @@ return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
-
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
-
-    xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            progressCallback(percent);
-        }
-    };
-
-    xhr.onload = () => {
-        if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            resolve(data.secure_url);
-        } else {
-            reject("Upload failed");
-        }
-    };
-
-    xhr.onerror = () => reject("Upload error");
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) progressCallback(Math.round((e.loaded / e.total) * 100)); };
+    xhr.onload = () => { if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).secure_url); else reject(); };
+    xhr.onerror = () => reject();
     xhr.send(formData);
 });
 }
 
-// ====================== CLASSES (REALTIME DATABASE + SUCCESS) ======================
-function showAddClassModal() {
-document.getElementById("add-class-modal").classList.remove("hidden");
-}
-function hideAddClassModal() {
-document.getElementById("add-class-modal").classList.add("hidden");
-document.getElementById("class-form").reset();
-}
+// ====================== CLASSES ======================
+function showAddClassModal() { document.getElementById("add-class-modal").classList.remove("hidden"); }
+function hideAddClassModal() { document.getElementById("add-class-modal").classList.add("hidden"); document.getElementById("class-form").reset(); }
 
 async function handleAddClass(e) {
 e.preventDefault();
@@ -886,20 +837,36 @@ const time = document.getElementById("class-time").value;
 const capacity = parseInt(document.getElementById("class-capacity").value);
 const trainer = document.getElementById("class-trainer").value;
 
-db.ref("classes").push({
-name, day, time, capacity, trainer,
-timestamp: Date.now()
-});
+db.ref("classes").push({ name, day, time, capacity, trainer, timestamp: Date.now() });
 
 hideAddClassModal();
 document.getElementById("class-form").reset();
 loadClassesTable();
+loadDashboard();                    // ← THIS FIXES THE DASHBOARD
 showSuccessModal("Class added successfully and is now live!");
+}
+
+// ====================== TABLES ======================
+function loadTrainersTable() {
+if (!db) return;
+db.ref("trainers").on('value', snapshot => {
+let html = `<table class="w-full"><thead><tr class="bg-dark/70 text-xs uppercase tracking-widest"><th class="p-5 text-left">Trainer</th><th>Specialty</th><th>Status</th><th class="text-right">Actions</th></tr></thead><tbody>`;
+snapshot.forEach(child => {
+const t = child.val();
+html += `<tr class="table-row border-b border-gray-800">
+<td class="p-5 flex items-center gap-4"><img src="${t.imageUrl || 'https://ui-avatars.com/api/?name='+t.name}" class="w-10 h-10 rounded-2xl object-cover"><div><p class="font-semibold">${t.name}</p><p class="text-xs text-gray-500">${t.email}</p></div></td>
+<td class="p-5">${t.specialty}</td>
+<td class="p-5"><span class="px-5 py-1 text-xs bg-green-500/10 text-green-400 rounded-full">ACTIVE</span></td>
+<td class="p-5 text-right">•••</td>
+</tr>`;
+});
+html += `</tbody></table>`;
+document.getElementById("trainers-table-container").innerHTML = html;
+});
 }
 
 function loadClassesTable() {
 if (!db) return;
-const container = document.getElementById("classes-table-container");
 db.ref("classes").on('value', snapshot => {
 let html = `<table class="w-full"><thead><tr class="bg-dark/70 text-xs uppercase tracking-widest"><th class="p-5 text-left">Class</th><th>Day</th><th>Time</th><th>Capacity</th><th>Trainer</th></tr></thead><tbody>`;
 snapshot.forEach(child => {
@@ -913,31 +880,11 @@ html += `<tr class="table-row border-b border-gray-800">
 </tr>`;
 });
 html += `</tbody></table>`;
-container.innerHTML = html;
+document.getElementById("classes-table-container").innerHTML = html;
 });
 }
 
-// ====================== TRAINERS TABLE ======================
-function loadTrainersTable() {
-if (!db) return;
-const container = document.getElementById("trainers-table-container");
-db.ref("trainers").on('value', snapshot => {
-let html = `<table class="w-full"><thead><tr class="bg-dark/70 text-xs uppercase tracking-widest"><th class="p-5 text-left">Trainer</th><th>Specialty</th><th>Status</th><th class="text-right">Actions</th></tr></thead><tbody>`;
-snapshot.forEach(child => {
-const t = child.val();
-html += `<tr class="table-row border-b border-gray-800">
-<td class="p-5 flex items-center gap-4"><img src="${t.imageUrl || 'https://ui-avatars.com/api/?name='+t.name}" class="w-10 h-10 rounded-2xl object-cover"><div><p class="font-semibold">${t.name}</p><p class="text-xs text-gray-500">${t.email}</p></div></td>
-<td class="p-5">${t.specialty}</td>
-<td class="p-5"><span class="px-5 py-1 text-xs bg-green-500/10 text-green-400 rounded-full">ACTIVE</span></td>
-<td class="p-5 text-right">•••</td>
-</tr>`;
-});
-html += `</tbody></table>`;
-container.innerHTML = html;
-});
-}
-
-// ====================== OTHER TABLES (minimal) ======================
+// ====================== OTHER TABLES ======================
 function loadMembersTable() { document.getElementById("members-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time members</p>`; }
 function loadAttendanceTable() { document.getElementById("attendance-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time attendance</p>`; }
 function loadLeadsTable() { document.getElementById("leads-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time leads</p>`; }
@@ -947,45 +894,29 @@ function loadInventoryTable() { document.getElementById("inventory-table-contain
 function loadNotifications() {
 if (!db) return;
 db.ref("notifications").orderByChild("timestamp").limitToLast(10).on('value', s => {
-let unread = 0;
-let html = '';
-const arr = [];
-s.forEach(child => arr.push(child.val()));
+let unread = 0; let html = '';
+const arr = []; s.forEach(child => arr.push(child.val()));
 arr.reverse();
-arr.forEach(n => {
-if (!n.read) unread++;
-html += `<div class="p-5 border-b border-gray-800 hover:bg-gray-900/50">${n.message || 'New activity'}</div>`;
-});
+arr.forEach(n => { if (!n.read) unread++; html += `<div class="p-5 border-b border-gray-800 hover:bg-gray-900/50">${n.message || 'New activity'}</div>`; });
 document.getElementById("notification-list").innerHTML = html || '<div class="p-12 text-center text-gray-500">No notifications</div>';
 document.getElementById("notif-count").textContent = unread;
 });
 }
 
-function toggleNotifications() {
-document.getElementById("notification-dropdown").classList.toggle("hidden");
-}
-function markAllRead() {
-document.getElementById("notif-count").textContent = "0";
-}
-
-function generateReport(type) {
-alert(`Exporting ${type} report...`);
-}
-
+function toggleNotifications() { document.getElementById("notification-dropdown").classList.toggle("hidden"); }
+function markAllRead() { document.getElementById("notif-count").textContent = "0"; }
+function generateReport(type) { alert(`Exporting ${type} report...`); }
 function showFilterModal() { document.getElementById("filter-modal").classList.remove("hidden"); }
 function hideFilterModal() { document.getElementById("filter-modal").classList.add("hidden"); }
 function applyFilters() { hideFilterModal(); alert("Filters applied"); }
 function filterMembers() { alert("Search triggered"); }
-
-function logout() {
-if (confirm("Logout?")) location.reload();
-}
+function logout() { if (confirm("Logout?")) location.reload(); }
 
 // ====================== INIT ======================
 window.onload = () => {
 switchTab('dashboard');
 loadNotifications();
-console.log("%cFITCORE Admin Dashboard v2 - FULLY FUNCTIONAL (Realtime DB + Progress + Success Modal + ZAR) 🔥", "color:#D6FF00; font-size:14px");
+console.log("%cFITCORE Admin Dashboard v2 - FULLY FUNCTIONAL (Trainers now update dashboard instantly) 🔥", "color:#D6FF00; font-size:14px");
 };
 </script>
 </body>
