@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -94,6 +94,47 @@
         }
         .animate-fadeInUp {
             animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* ===== UPLOAD PROGRESS ===== */
+        #upload-progress-wrap {
+            display: none;
+        }
+        #upload-progress-wrap.visible {
+            display: block;
+        }
+        .progress-bar-track {
+            height: 8px;
+            background: #222;
+            border-radius: 9999px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #D6FF00, #a8cc00);
+            border-radius: 9999px;
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        /* ===== SUCCESS MODAL ===== */
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+            70% { transform: scale(1.05) translateY(-4px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .success-modal-inner {
+            animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes checkDraw {
+            from { stroke-dashoffset: 100; }
+            to { stroke-dashoffset: 0; }
+        }
+        .check-path {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: checkDraw 0.5s ease 0.3s forwards;
         }
     </style>
 </head>
@@ -196,7 +237,6 @@
                 </div>
                 <!-- KPI Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                    <!-- Total Members, Revenue, Trainers, Pending Inquiries - same as before but pill & hover enhanced -->
                     <div class="card bg-card border border-gray-900 p-6 rounded-3xl">
                         <div class="flex justify-between items-start mb-4">
                             <div>
@@ -353,7 +393,7 @@
             <div id="attendance-tab" class="tab-content">
                 <h2 class="text-3xl font-bold font-heading mb-6">Attendance &amp; Check-ins</h2>
                 <div class="bg-card border border-gray-900 p-6 rounded-3xl">
-                    <p class="text-gray-400 mb-4">Live check-ins (Firestore: <span class="font-mono text-primary">"attendance"</span>)</p>
+                    <p class="text-gray-400 mb-4">Live check-ins (Realtime DB: <span class="font-mono text-primary">"attendance"</span>)</p>
                     <div id="attendance-table-container" class="overflow-x-auto"></div>
                 </div>
             </div>
@@ -383,14 +423,14 @@
             <div id="inventory-tab" class="tab-content">
                 <h2 class="text-3xl font-bold font-heading mb-6">Inventory &amp; Maintenance</h2>
                 <div class="bg-card border border-gray-900 p-6 rounded-3xl">
-                    <p class="text-gray-400 mb-4">Equipment list (Firestore: <span class="font-mono text-primary">"inventory"</span>)</p>
+                    <p class="text-gray-400 mb-4">Equipment list (Realtime DB: <span class="font-mono text-primary">"inventory"</span>)</p>
                     <div id="inventory-table-container" class="overflow-x-auto"></div>
                 </div>
             </div>
             <div id="leads-tab" class="tab-content">
                 <h2 class="text-3xl font-bold font-heading mb-6">Leads &amp; Inquiries</h2>
                 <div class="bg-card border border-gray-900 p-6 rounded-3xl">
-                    <p class="text-gray-400 mb-4">Follow-up status (Firestore: <span class="font-mono text-primary">"leads"</span>)</p>
+                    <p class="text-gray-400 mb-4">Follow-up status (Realtime DB: <span class="font-mono text-primary">"leads"</span>)</p>
                     <div id="leads-table-container" class="overflow-x-auto"></div>
                 </div>
             </div>
@@ -402,7 +442,8 @@
             </div>
         </div>
     </main>
-    <!-- ADD TRAINER MODAL -->
+
+    <!-- ===== ADD TRAINER MODAL ===== -->
     <div id="add-trainer-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div class="bg-card border border-gray-900 w-full max-w-lg rounded-3xl p-8 animate-fadeInUp">
             <h3 class="text-2xl font-bold mb-6">Add New Trainer</h3>
@@ -424,15 +465,26 @@
                         <label class="text-xs text-gray-400 block mb-2">Profile Photo</label>
                         <input id="trainer-image" type="file" accept="image/*" required class="w-full bg-dark border border-gray-700 rounded-2xl px-5 py-4">
                     </div>
+                    <!-- Upload Progress -->
+                    <div id="upload-progress-wrap" class="mt-2">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Uploading photo...</span>
+                            <span id="upload-percent">0%</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div id="upload-progress-fill" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="flex gap-4 mt-8">
                     <button type="button" onclick="hideAddTrainerModal()" class="flex-1 py-4 border border-gray-700 hover:bg-gray-900 rounded-full">Cancel</button>
-                    <button type="submit" class="flex-1 py-4 bg-primary text-black font-bold rounded-full">Add Trainer</button>
+                    <button id="trainer-submit-btn" type="submit" class="flex-1 py-4 bg-primary text-black font-bold rounded-full">Add Trainer</button>
                 </div>
             </form>
         </div>
     </div>
-    <!-- ADD CLASS MODAL -->
+
+    <!-- ===== ADD CLASS MODAL ===== -->
     <div id="add-class-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div class="bg-card border border-gray-900 w-full max-w-lg rounded-3xl p-8 animate-fadeInUp">
             <h3 class="text-2xl font-bold mb-6">Add New Class</h3>
@@ -470,6 +522,24 @@
             </form>
         </div>
     </div>
+
+    <!-- ===== SUCCESS CONFIRMATION MODAL ===== -->
+    <div id="success-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[60]">
+        <div class="success-modal-inner bg-card border border-gray-800 rounded-3xl p-10 flex flex-col items-center max-w-sm w-full mx-4 text-center shadow-2xl">
+            <!-- Animated checkmark -->
+            <div class="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center mb-6">
+                <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" stroke="#D6FF00" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path class="check-path" d="M8 20 L17 29 L32 12"/>
+                </svg>
+            </div>
+            <h3 id="success-modal-title" class="text-2xl font-bold font-heading tracking-wide mb-2 text-white">SUCCESS!</h3>
+            <p id="success-modal-message" class="text-gray-400 text-sm mb-8">Record added successfully.</p>
+            <button onclick="closeSuccessModal()" class="btn-primary bg-primary text-black font-bold px-10 py-3 rounded-full w-full hover:bg-white transition-colors">
+                Done
+            </button>
+        </div>
+    </div>
+
     <!-- NOTIFICATION DROPDOWN -->
     <div id="notification-dropdown" class="hidden absolute top-20 right-8 bg-card border border-gray-900 w-96 rounded-3xl shadow-2xl z-50 overflow-hidden">
         <div class="p-4 border-b border-gray-900 flex justify-between items-center">
@@ -478,6 +548,7 @@
         </div>
         <div id="notification-list" class="max-h-96 overflow-y-auto text-sm"></div>
     </div>
+
     <!-- FILTER MODAL -->
     <div id="filter-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
         <div class="bg-card border border-gray-900 w-full max-w-md rounded-3xl p-8">
@@ -510,11 +581,13 @@
             </div>
         </div>
     </div>
+
     <script>
-        // ====================== FIREBASE CONFIG ======================
+        // ====================== FIREBASE CONFIG (Realtime Database) ======================
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY_HERE",
             authDomain: "your-project-id.firebaseapp.com",
+            databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
             projectId: "your-project-id",
             storageBucket: "your-project-id.appspot.com",
             messagingSenderId: "123456789012",
@@ -523,13 +596,51 @@
         let db;
         try {
             firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
+            db = firebase.database();
         } catch (e) {
-            console.warn("Firebase not configured");
+            console.warn("Firebase not configured:", e);
         }
+
         // ====================== CLOUDINARY CONFIG ======================
         const CLOUD_NAME = "dv5bsbydu";
         const UPLOAD_PRESET = "admin_tlaka";
+
+        // ====================== SUCCESS MODAL ======================
+        function showSuccessModal(title, message) {
+            document.getElementById("success-modal-title").textContent = title;
+            document.getElementById("success-modal-message").textContent = message;
+            const modal = document.getElementById("success-modal");
+            modal.classList.remove("hidden");
+            // Re-trigger animation by replacing inner element
+            const inner = modal.querySelector('.success-modal-inner');
+            inner.style.animation = 'none';
+            inner.offsetHeight; // reflow
+            inner.style.animation = '';
+            // Re-trigger check path animation
+            const path = inner.querySelector('.check-path');
+            path.style.animation = 'none';
+            path.offsetHeight;
+            path.style.animation = '';
+        }
+        function closeSuccessModal() {
+            document.getElementById("success-modal").classList.add("hidden");
+        }
+
+        // ====================== UPLOAD PROGRESS HELPERS ======================
+        function showUploadProgress() {
+            const wrap = document.getElementById("upload-progress-wrap");
+            wrap.classList.add("visible");
+            setUploadProgress(0);
+        }
+        function hideUploadProgress() {
+            const wrap = document.getElementById("upload-progress-wrap");
+            wrap.classList.remove("visible");
+        }
+        function setUploadProgress(pct) {
+            document.getElementById("upload-progress-fill").style.width = pct + "%";
+            document.getElementById("upload-percent").textContent = pct + "%";
+        }
+
         // ====================== CHARTS ======================
         let revenueChartInstance = null;
         let doughnutInstance = null;
@@ -557,6 +668,7 @@
                 options: { plugins: { legend: { position: 'bottom', labels: { color: '#aaa', padding: 20 } } } }
             });
         }
+
         // ====================== TAB SWITCH ======================
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -573,26 +685,28 @@
             if (tab === 'leads') loadLeadsTable();
             if (tab === 'inventory') loadInventoryTable();
         }
+
         // ====================== PENDING VERIFICATION ======================
         async function loadPendingRequests() {
             if (!db) return;
-            db.collection("membershipRequests").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+            db.ref("membershipRequests").orderByChild("timestamp").on('value', snapshot => {
                 let html = '';
                 let count = 0;
-                snapshot.forEach(doc => {
-                    const req = doc.data();
+                snapshot.forEach(child => {
+                    const req = child.val();
+                    const id = child.key;
                     count++;
-                    html += `
+                    html = `
                         <div class="flex items-center justify-between bg-gray-900/70 p-5 rounded-3xl">
                             <div>
                                 <p class="font-semibold">${req.name}</p>
                                 <p class="text-xs text-gray-400">${req.email} • ${req.plan}</p>
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="approveRequest('${doc.id}')" class="bg-green-500 text-black px-5 py-2 rounded-full text-sm font-medium hover:bg-green-400">Approve</button>
-                                <button onclick="rejectRequest('${doc.id}')" class="bg-red-500 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-red-400">Reject</button>
+                                <button onclick="approveRequest('${id}')" class="bg-green-500 text-black px-5 py-2 rounded-full text-sm font-medium hover:bg-green-400">Approve</button>
+                                <button onclick="rejectRequest('${id}')" class="bg-red-500 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-red-400">Reject</button>
                             </div>
-                        </div>`;
+                        </div>` + html;
                 });
                 document.getElementById("pending-list").innerHTML = html || '<p class="text-center text-gray-500 py-12">No pending requests</p>';
                 document.getElementById("pending-count").textContent = `${count} requests`;
@@ -600,79 +714,87 @@
         }
         async function approveRequest(id) {
             if (!db) return;
-            const docRef = db.collection("membershipRequests").doc(id);
-            const doc = await docRef.get();
-            const data = doc.data();
-            await db.collection("members").add({
+            const snap = await db.ref("membershipRequests/" + id).get();
+            const data = snap.val();
+            await db.ref("members").push({
                 ...data,
                 status: "ACTIVE",
                 joinDate: new Date().toISOString().slice(0,10)
             });
-            await docRef.delete();
+            await db.ref("membershipRequests/" + id).remove();
         }
         async function rejectRequest(id) {
             if (!db) return;
-            await db.collection("membershipRequests").doc(id).delete();
+            await db.ref("membershipRequests/" + id).remove();
         }
+
         // ====================== DASHBOARD LOAD ======================
         function loadDashboard() {
             if (!db) return;
             // Total members
-            db.collection("members").onSnapshot(s => document.getElementById("total-members").textContent = s.size);
+            db.ref("members").on('value', s => {
+                document.getElementById("total-members").textContent = s.numChildren();
+            });
             // Revenue
-            db.collection("stats").doc("revenue").onSnapshot(doc => {
-                if (doc.exists) {
-                    const r = doc.data().monthly || 0;
+            db.ref("stats/revenue").on('value', doc => {
+                if (doc.exists()) {
+                    const r = doc.val().monthly || 0;
                     document.getElementById("monthly-revenue").textContent = "$" + r.toLocaleString();
                     document.getElementById("revenue-total").textContent = "$" + r.toLocaleString();
                 }
             });
             // Active trainers
-            db.collection("trainers").where("status","==","active").onSnapshot(s => document.getElementById("active-trainers").textContent = s.size);
-            // Pending leads
-            db.collection("leads").where("status","==","pending").onSnapshot(s => {
-                document.getElementById("pending-leads").textContent = s.size;
+            db.ref("trainers").orderByChild("status").equalTo("active").on('value', s => {
+                document.getElementById("active-trainers").textContent = s.numChildren();
             });
-            // Recent registrations (approved only)
-            db.collection("members").orderBy("joinDate","desc").limit(5).onSnapshot(snapshot => {
-                let html = '';
-                snapshot.forEach(doc => {
-                    const m = doc.data();
-                    html += `<tr class="table-row border-b border-gray-900">
-                        <td class="p-4 flex items-center gap-3"><div class="w-8 h-8 bg-gray-800 rounded-2xl flex items-center justify-center text-primary font-bold">${m.name?.substring(0,2).toUpperCase()||'??'}</div><div><p class="font-semibold">${m.name}</p><p class="text-xs text-gray-500">${m.email}</p></div></td>
+            // Pending leads
+            db.ref("leads").orderByChild("status").equalTo("pending").on('value', s => {
+                document.getElementById("pending-leads").textContent = s.numChildren();
+            });
+            // Recent registrations
+            db.ref("members").orderByChild("joinDate").limitToLast(5).on('value', snapshot => {
+                let rows = [];
+                snapshot.forEach(child => {
+                    const m = child.val();
+                    rows.unshift(`<tr class="table-row border-b border-gray-900">
+                        <td class="p-4 flex items-center gap-3"><div class="w-8 h-8 bg-gray-800 rounded-2xl flex items-center justify-center text-primary font-bold">${(m.name||'??').substring(0,2).toUpperCase()}</div><div><p class="font-semibold">${m.name}</p><p class="text-xs text-gray-500">${m.email}</p></div></td>
                         <td class="p-4 text-gray-300">${m.plan}</td>
                         <td class="p-4 text-gray-400">${m.joinDate}</td>
                         <td class="p-4"><span class="bg-primary/10 text-primary px-4 py-1 text-xs font-semibold rounded-full">ACTIVE</span></td>
                         <td class="p-4 text-right">•••</td>
-                    </tr>`;
+                    </tr>`);
                 });
-                document.getElementById("recent-registrations").innerHTML = html || '<tr><td colspan="5" class="p-12 text-center text-gray-500">No members yet</td></tr>';
+                document.getElementById("recent-registrations").innerHTML = rows.join('') || '<tr><td colspan="5" class="p-12 text-center text-gray-500">No members yet</td></tr>';
             });
-            // At-risk
-            const fourteenDays = new Date();
-            fourteenDays.setDate(fourteenDays.getDate() + 14);
-            db.collection("members").where("membershipEnd", "<", firebase.firestore.Timestamp.fromDate(fourteenDays)).onSnapshot(s => {
+            // At-risk (members with membershipEnd field set)
+            db.ref("members").on('value', s => {
+                const now = Date.now();
+                const fourteenDays = now + (14 * 24 * 60 * 60 * 1000);
                 let html = '';
-                s.forEach(d => {
-                    const m = d.data();
-                    html += `<div class="flex justify-between items-center bg-gray-900 p-4 rounded-3xl"><div><p>${m.name}</p><p class="text-xs text-red-400">Expires soon</p></div><span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full">AT RISK</span></div>`;
+                let count = 0;
+                s.forEach(child => {
+                    const m = child.val();
+                    if (m.membershipEnd && m.membershipEnd < fourteenDays) {
+                        count++;
+                        html += `<div class="flex justify-between items-center bg-gray-900 p-4 rounded-3xl"><div><p>${m.name}</p><p class="text-xs text-red-400">Expires soon</p></div><span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full">AT RISK</span></div>`;
+                    }
                 });
                 document.getElementById("at-risk-list").innerHTML = html || '<p class="text-green-500 py-6">No at-risk members</p>';
-                document.getElementById("at-risk-count").textContent = s.size;
+                document.getElementById("at-risk-count").textContent = count;
             });
             // Plans doughnut
-            db.collection("members").onSnapshot(s => {
+            db.ref("members").on('value', s => {
                 const plans = {};
-                s.forEach(d => {
-                    const p = d.data().plan || "Other";
+                s.forEach(child => {
+                    const p = child.val().plan || "Other";
                     plans[p] = (plans[p] || 0) + 1;
                 });
                 initDoughnut(plans);
             });
             // Occupancy
-            db.collection("stats").doc("occupancy").onSnapshot(doc => {
-                if (doc.exists) {
-                    const o = doc.data();
+            db.ref("stats/occupancy").on('value', doc => {
+                if (doc.exists()) {
+                    const o = doc.val();
                     const perc = Math.round((o.current / o.capacity) * 100);
                     document.getElementById("current-occupancy").textContent = o.current;
                     document.getElementById("capacity").textContent = `/ ${o.capacity}`;
@@ -683,53 +805,97 @@
             loadPendingRequests();
             initRevenueChart();
         }
+
         // ====================== TRAINERS ======================
         function showAddTrainerModal() {
+            hideUploadProgress();
             document.getElementById("add-trainer-modal").classList.remove("hidden");
         }
         function hideAddTrainerModal() {
             document.getElementById("add-trainer-modal").classList.add("hidden");
+            hideUploadProgress();
         }
+
         async function uploadToCloudinary(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', UPLOAD_PRESET);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: formData
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', UPLOAD_PRESET);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        setUploadProgress(pct);
+                    }
+                };
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        setUploadProgress(100);
+                        resolve(data.secure_url);
+                    } else {
+                        reject(new Error("Upload failed"));
+                    }
+                };
+                xhr.onerror = () => reject(new Error("Upload error"));
+                xhr.send(formData);
             });
-            const data = await res.json();
-            return data.secure_url;
         }
+
         async function handleAddTrainer(e) {
             e.preventDefault();
             if (!db) return alert("Firebase not connected");
+
             const name = document.getElementById("trainer-name").value;
             const email = document.getElementById("trainer-email").value;
             const specialty = document.getElementById("trainer-specialty").value;
             const fileInput = document.getElementById("trainer-image");
+
+            const submitBtn = document.getElementById("trainer-submit-btn");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Saving...";
+
             let imageUrl = "";
             if (fileInput.files.length > 0) {
-                imageUrl = await uploadToCloudinary(fileInput.files[0]);
+                showUploadProgress();
+                try {
+                    imageUrl = await uploadToCloudinary(fileInput.files[0]);
+                } catch (err) {
+                    console.error(err);
+                    alert("Image upload failed. Please try again.");
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Add Trainer";
+                    hideUploadProgress();
+                    return;
+                }
             }
-            await db.collection("trainers").add({
+
+            await db.ref("trainers").push({
                 name, email, specialty, imageUrl,
                 status: "active",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: Date.now()
             });
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Add Trainer";
             hideAddTrainerModal();
             document.getElementById("trainer-form").reset();
             loadTrainersTable();
+            showSuccessModal("TRAINER ADDED!", `${name} has been successfully added as a trainer.`);
         }
+
         function loadTrainersTable() {
             if (!db) return;
             const container = document.getElementById("trainers-table-container");
-            db.collection("trainers").onSnapshot(snapshot => {
+            db.ref("trainers").on('value', snapshot => {
                 let html = `<table class="w-full"><thead><tr class="bg-dark/70 text-xs uppercase tracking-widest"><th class="p-5 text-left">Trainer</th><th>Specialty</th><th>Status</th><th class="text-right">Actions</th></tr></thead><tbody>`;
-                snapshot.forEach(doc => {
-                    const t = doc.data();
+                snapshot.forEach(child => {
+                    const t = child.val();
                     html += `<tr class="table-row border-b border-gray-800">
-                        <td class="p-5 flex items-center gap-4"><img src="${t.imageUrl || 'https://ui-avatars.com/api/?name='+t.name}" class="w-10 h-10 rounded-2xl object-cover"><div><p class="font-semibold">${t.name}</p><p class="text-xs text-gray-500">${t.email}</p></div></td>
+                        <td class="p-5 flex items-center gap-4"><img src="${t.imageUrl || 'https://ui-avatars.com/api/?name='+encodeURIComponent(t.name)+'&background=D6FF00&color=000'}" class="w-10 h-10 rounded-2xl object-cover"><div><p class="font-semibold">${t.name}</p><p class="text-xs text-gray-500">${t.email}</p></div></td>
                         <td class="p-5">${t.specialty}</td>
                         <td class="p-5"><span class="px-5 py-1 text-xs bg-green-500/10 text-green-400 rounded-full">ACTIVE</span></td>
                         <td class="p-5 text-right">•••</td>
@@ -739,6 +905,7 @@
                 container.innerHTML = html;
             });
         }
+
         // ====================== CLASSES ======================
         function showAddClassModal() {
             document.getElementById("add-class-modal").classList.remove("hidden");
@@ -746,29 +913,35 @@
         function hideAddClassModal() {
             document.getElementById("add-class-modal").classList.add("hidden");
         }
+
         async function handleAddClass(e) {
             e.preventDefault();
             if (!db) return alert("Firebase not connected");
+
             const name = document.getElementById("class-name").value;
             const day = document.getElementById("class-day").value;
             const time = document.getElementById("class-time").value;
             const capacity = parseInt(document.getElementById("class-capacity").value);
             const trainer = document.getElementById("class-trainer").value;
-            await db.collection("classes").add({
+
+            await db.ref("classes").push({
                 name, day, time, capacity, trainer,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: Date.now()
             });
+
             hideAddClassModal();
             document.getElementById("class-form").reset();
             loadClassesTable();
+            showSuccessModal("CLASS ADDED!", `"${name}" on ${day} at ${time} has been successfully scheduled.`);
         }
+
         function loadClassesTable() {
             if (!db) return;
             const container = document.getElementById("classes-table-container");
-            db.collection("classes").onSnapshot(snapshot => {
+            db.ref("classes").on('value', snapshot => {
                 let html = `<table class="w-full"><thead><tr class="bg-dark/70 text-xs uppercase tracking-widest"><th class="p-5 text-left">Class</th><th>Day</th><th>Time</th><th>Capacity</th><th>Trainer</th></tr></thead><tbody>`;
-                snapshot.forEach(doc => {
-                    const c = doc.data();
+                snapshot.forEach(child => {
+                    const c = child.val();
                     html += `<tr class="table-row border-b border-gray-800">
                         <td class="p-5 font-semibold">${c.name}</td>
                         <td class="p-5">${c.day}</td>
@@ -781,21 +954,23 @@
                 container.innerHTML = html;
             });
         }
+
         // ====================== OTHER TABLES (minimal) ======================
-        function loadMembersTable() { /* same as previous */ document.getElementById("members-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time members</p>`; }
+        function loadMembersTable() { document.getElementById("members-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time members</p>`; }
         function loadAttendanceTable() { document.getElementById("attendance-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time attendance</p>`; }
         function loadLeadsTable() { document.getElementById("leads-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time leads</p>`; }
         function loadInventoryTable() { document.getElementById("inventory-table-container").innerHTML = `<p class="p-12 text-center text-gray-500">Real-time inventory</p>`; }
+
         // ====================== NOTIFICATIONS ======================
         function loadNotifications() {
             if (!db) return;
-            db.collection("notifications").orderBy("timestamp","desc").limit(10).onSnapshot(s => {
+            db.ref("notifications").orderByChild("timestamp").limitToLast(10).on('value', s => {
                 let unread = 0;
                 let html = '';
-                s.forEach(doc => {
-                    const n = doc.data();
+                s.forEach(child => {
+                    const n = child.val();
                     if (!n.read) unread++;
-                    html += `<div class="p-5 border-b border-gray-800 hover:bg-gray-900/50">${n.message || 'New activity'}</div>`;
+                    html = `<div class="p-5 border-b border-gray-800 hover:bg-gray-900/50">${n.message || 'New activity'}</div>` + html;
                 });
                 document.getElementById("notification-list").innerHTML = html || '<div class="p-12 text-center text-gray-500">No notifications</div>';
                 document.getElementById("notif-count").textContent = unread;
@@ -817,11 +992,12 @@
         function logout() {
             if (confirm("Logout?")) location.reload();
         }
+
         // ====================== INIT ======================
         window.onload = () => {
             switchTab('dashboard');
             loadNotifications();
-            console.log("%cFITCORE Admin Dashboard v2 - Ready with pending verification, Cloudinary upload & pill animations 🔥", "color:#D6FF00; font-size:14px");
+            console.log("%cFITCORE Admin Dashboard — Realtime DB + Upload Progress + Success Modal 🔥", "color:#D6FF00; font-size:14px");
         };
     </script>
 </body>
